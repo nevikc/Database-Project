@@ -9,16 +9,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Taisunnn/ccps610assignment2.git"
+    "url": "git+https://github.com/nevikc/Database-Project.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/Taisunnn/ccps610assignment2/issues"
+    "url": "https://github.com/nevikc/Database-Project/issues"
   },
-  "homepage": "https://github.com/Taisunnn/ccps610assignment2#readme",
+  "homepage": "https://github.com/nevikc/Database-Project#readme",
   "devDependencies": {
     "concurrently": "^9.2.1"
   },
