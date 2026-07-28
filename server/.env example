@@ -1,0 +1,6 @@
+# Create a new file called .env
+# Fill in your username and password to connect to oracleDB
+# Make sure connected to vpn
+DB_USER=
+DB_PASSWORD=
+DB_CONNECTION=orsrv1.cs.torontomu.ca:1521/orcldb
