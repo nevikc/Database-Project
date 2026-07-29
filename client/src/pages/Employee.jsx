@@ -49,10 +49,12 @@ function EmployeeHiringForm() {
                                 JOB_TITLE: job.JOB_TITLE
                             })));
                 setManagers(managerData.data.map(manager => ({
-                                EMPLOYEE_ID: manager.EMPLOYEE_ID,
-                                FIRST_NAME: manager.FIRST_NAME,
-                                LAST_NAME: manager.LAST_NAME
-                            })));
+                    EMPLOYEE_ID: manager.EMPLOYEE_ID,
+                    FIRST_NAME: manager.FIRST_NAME,
+                    LAST_NAME: manager.LAST_NAME,
+                    DEPARTMENT_NAME: manager.DEPARTMENT_NAME,
+                    JOB_TITLE: manager.JOB_TITLE
+                })));
                 setEmployees(employeeData.data);
 
             } catch (error) {
@@ -350,7 +352,7 @@ function EmployeeHiringForm() {
                                     key={manager.EMPLOYEE_ID}
                                     value={manager.EMPLOYEE_ID}
                                 >
-                                    {manager.FIRST_NAME} {manager.LAST_NAME}
+                                    {manager.FIRST_NAME} {manager.LAST_NAME}, {manager.DEPARTMENT_NAME || "No Department"}, {manager.JOB_TITLE || "No Role"}
                                 </option>
                             ))}
 
@@ -482,7 +484,7 @@ function EmployeeHiringForm() {
                                             key={manager.EMPLOYEE_ID}
                                             value={manager.EMPLOYEE_ID}
                                         >
-                                            {manager.FIRST_NAME} {manager.LAST_NAME}
+                                            {manager.FIRST_NAME} {manager.LAST_NAME}, {manager.DEPARTMENT_NAME || "No Department"}, {manager.JOB_TITLE || "No Role"}
                                         </option>
                                     ))}
                                 </select>

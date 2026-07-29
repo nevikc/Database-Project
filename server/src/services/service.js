@@ -150,10 +150,20 @@ async function getAllManagers() {
             SELECT DISTINCT
                 m.EMPLOYEE_ID,
                 m.FIRST_NAME,
-                m.LAST_NAME
+                m.LAST_NAME,
+                m.DEPARTMENT_ID,
+                d.DEPARTMENT_NAME,
+                m.JOB_ID,
+                j.JOB_TITLE
             FROM HR_EMPLOYEES e
             JOIN HR_EMPLOYEES m
-            ON e.MANAGER_ID = m.EMPLOYEE_ID
+                ON e.MANAGER_ID = m.EMPLOYEE_ID
+            LEFT JOIN HR_DEPARTMENTS d
+                ON m.DEPARTMENT_ID = d.DEPARTMENT_ID
+            LEFT JOIN HR_JOBS j
+                ON m.JOB_ID = j.JOB_ID
+            WHERE m.EMPLOYEE_ID IS NOT NULL
+            ORDER BY m.EMPLOYEE_ID
             `,
              [],
             {
