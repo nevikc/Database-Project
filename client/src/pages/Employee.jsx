@@ -79,14 +79,14 @@ function EmployeeHiringForm() {
         const { name, value } = e.target;
         setFormData({
             ...formData,
-            [name]: name === "PHONE_NUMBER" ? formatPhone(value) : value.toUpperCase()
+            [name]: name === "PHONE_NUMBER" ? formatPhone(value) : value
         });
     };
     const handleEditChange = (e) => {
         const {name, value} = e.target;
         setEditingEmployee({
             ...editingEmployee,
-            [name]: name === "PHONE_NUMBER" ? formatPhone(value): value.toUpperCase()
+            [name]: name === "PHONE_NUMBER" ? formatPhone(value): value
         });
     };
 
@@ -161,8 +161,8 @@ function EmployeeHiringForm() {
                     );
                 } else {
                     setEmployees(prev => [
+                        savedEmployee.data,
                         ...prev,
-                        savedEmployee.data
                     ]);
                     alert("Employee hired successfully!");
                 }
@@ -201,19 +201,22 @@ function EmployeeHiringForm() {
                                     employee.SALARY
                                 }
                                 jobTitle={
-                                    employee.jobTitle?.title 
-                                    || employee.jobTitle
+                                    employee.jobTitle?.title
+                                    || employee.JOB_TITLE
+                                    || employee.JOB_ID
                                     || "Not Assigned"
                                 }
                                 manager={
-                                    employee.MANAGER_ID
+                                    employee.manager
                                     ? `${employee.manager.firstName} ${employee.manager.lastName}`
-                                    : "No Manager"
+                                    : employee.MANAGER_ID
+                                        ? `Manager ID: ${employee.MANAGER_ID}`
+                                        : "No Manager"
                                 }
                                 department={
                                     employee.department?.name
-                                    || employee.department
-                                    || "No Department"
+                                    || employee.DEPARTMENT_NAME
+                                    || (employee.DEPARTMENT_ID ? `Department ID: ${employee.DEPARTMENT_ID}` : "No Department")
                                 }
                                 onEdit={() =>
                                     handleEdit(employee)

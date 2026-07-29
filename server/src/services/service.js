@@ -212,71 +212,54 @@ async function createJob(jobData){
     }
 }
 
-async function createEmployee(employeeData){
+async function createEmployee(employeeData) {
   let connection;
 
-    try {
-        connection = await connectDB();
-        
-        /*insert procedure/function name here from sql*/
-        await connection.execute(
-            `
-            INSERT INTO HR_EMPLOYEES (
-                EMPLOYEE_ID,
-                FIRST_NAME,
-                LAST_NAME,
-                EMAIL,
-                PHONE_NUMBER,
-                HIRE_DATE,
-                JOB_ID,
-                SALARY,
-                COMMISSION_PCT,
-                MANAGER_ID,
-                DEPARTMENT_ID
-            )
-            VALUES (
-                :employee_id,
-                :first_name,
-                :last_name,
-                :email,
-                :phone_number,
-                :hire_date,
-                :job_title,
-                :salary,
-                :commission_pct,
-                :manager_id,
-                :department_id
-            )
-            `,
-            {
-                employee_id: 900,
-                first_name: employeeData.FIRST_NAME,
-                last_name: employeeData.LAST_NAME,
-                email: employeeData.EMAIL,
-                phone_number: employeeData.PHONE_NUMBER,
-                hire_date: new Date(employeeData.HIRE_DATE),
-                job_title: employeeData.JOB_ID,
-                salary: employeeData.SALARY,
-                commission_pct : 0.2,
-                manager_id: employeeData.MANAGER_ID,
-                department_id: employeeData.DEPARTMENT_ID
-            },
-            {
-                autoCommit: true
-            }
-        );
-        const employees = await getAllEmployees();
+  try {
+    connection = await connectDB();
 
-        return employees.find(
-            employee => employee.EMPLOYEE_ID === 900
+    await connection.execute(
+      `
+      BEGIN
+        employee_hire_sp(
+          p_fname         => :first_name,
+          p_lname         => :last_name,
+          p_email         => :email,
+          p_phone         => :phone_number,
+          p_hire_date     => :hire_date,
+          p_job_id        => :job_id,
+          p_salary        => :salary,
+          p_manager_id    => :manager_id,
+          p_department_id => :department_id
         );
+      END;
+      `,
+      {
+        first_name: employeeData.FIRST_NAME,
+        last_name: employeeData.LAST_NAME,
+        email: employeeData.EMAIL,
+        phone_number: employeeData.PHONE_NUMBER,
+        hire_date: employeeData.HIRE_DATE
+          ? new Date(employeeData.HIRE_DATE)
+          : new Date(),
+        job_id: employeeData.JOB_ID,
+        salary: Number(employeeData.SALARY),
+        manager_id: Number(employeeData.MANAGER_ID),
+        department_id: Number(employeeData.DEPARTMENT_ID)
+      }
+    );
 
-    } finally {
-        if (connection) {
-            await connection.close();
-        }
+    const employees = await getAllEmployees();
+
+    return employees.find(
+      employee => employee.EMAIL === employeeData.EMAIL.toUpperCase()
+    );
+
+  } finally {
+    if (connection) {
+      await connection.close();
     }
-
+  }
 }
 
 async function updateJob(id, updateData){
