@@ -1,0 +1,115 @@
+-- This function gets a job title by its JOB_ID.
+CREATE OR REPLACE FUNCTION get_job (
+    p_job_id IN VARCHAR2
+) RETURN VARCHAR2
+IS
+    v_job_title HR_JOBS.JOB_TITLE%TYPE;
+BEGIN
+    SELECT JOB_TITLE
+    INTO v_job_title
+    FROM HR_JOBS j
+    WHERE j.JOB_ID = get_job.p_job_id;
+
+    RETURN v_job_title;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN NULL;
+    WHEN TOO_MANY_ROWS THEN
+        RETURN NULL;
+END get_job;
+
+-- This function updates a job record by its JOB_ID.
+CREATE OR REPLACE FUNCTION update_job (
+    p_job_id IN VARCHAR2,
+    p_job_title IN VARCHAR2,
+    p_min_salary IN NUMBER,
+    p_max_salary IN NUMBER
+) RETURN VARCHAR2
+IS
+BEGIN
+    UPDATE HR_JOBS
+    SET
+        JOB_TITLE = update_job.p_job_title,
+        MIN_SALARY = update_job.p_min_salary,
+        MAX_SALARY = update_job.p_max_salary
+    WHERE JOB_ID = update_job.p_job_id;
+
+    IF SQL%ROWCOUNT = 0 THEN
+        ROLLBACK;
+        RETURN 'JOB_NOT_FOUND';
+    END IF;
+
+    COMMIT;
+    RETURN 'SUCCESS';
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RETURN SQLERRM;
+END update_job;
+
+-- This procedure creates a new job using all four values entered in the form.
+CREATE OR REPLACE PROCEDURE new_job (
+    p_jobid IN HR_JOBS.JOB_ID%TYPE,
+    p_title IN HR_JOBS.JOB_TITLE%TYPE,
+    p_minsal IN HR_JOBS.MIN_SALARY%TYPE,
+    p_maxsal IN HR_JOBS.MAX_SALARY%TYPE
+) IS
+BEGIN
+    INSERT INTO HR_JOBS (
+        JOB_ID,
+        JOB_TITLE,
+        MIN_SALARY,
+        MAX_SALARY
+    )
+    VALUES (
+        p_jobid,
+        p_title,
+        p_minsal,
+        p_maxsal
+    );
+
+    COMMIT;
+
+    DBMS_OUTPUT.PUT_LINE('New row added to HR_JOBS table:');
+    DBMS_OUTPUT.PUT_LINE(
+        p_jobid || ' ' || p_title || ' ' ||
+        p_minsal || ' ' || p_maxsal
+    );
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
+END new_job;
+
+-- This procedure checks whether a salary is valid for a specified job.
+CREATE OR REPLACE PROCEDURE check_salary (
+    p_the_job IN HR_JOBS.JOB_ID%TYPE,
+    p_the_salary IN HR_EMPLOYEES.SALARY%TYPE
+) IS
+    v_minsal HR_JOBS.MIN_SALARY%TYPE;
+    v_maxsal HR_JOBS.MAX_SALARY%TYPE;
+BEGIN
+    SELECT MIN_SALARY, MAX_SALARY
+    INTO v_minsal, v_maxsal
+    FROM HR_JOBS
+    WHERE JOB_ID = UPPER(p_the_job);
+
+    IF p_the_salary NOT BETWEEN v_minsal AND v_maxsal THEN
+        RAISE_APPLICATION_ERROR(
+            -20100,
+            'Invalid salary ' || p_the_salary ||
+            '. Salaries for job ' || UPPER(p_the_job) ||
+            ' must be between ' || v_minsal ||
+            ' and ' || v_maxsal
+        );
+    END IF;
+END check_salary;
+
+-- This trigger checks salary before inserting an employee or changing job or salary.
+CREATE OR REPLACE TRIGGER check_salary_trg
+BEFORE INSERT OR UPDATE OF JOB_ID, SALARY
+ON HR_EMPLOYEES
+FOR EACH ROW
+BEGIN
+    check_salary(:NEW.JOB_ID, :NEW.SALARY);
+END check_salary_trg;

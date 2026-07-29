@@ -1,21 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Button from '../components/Button'; 
-import JobCard from '../components/JobCard';
 import Form from '../components/Form';
 
 function Jobs() {
 
     const [jobs, setJobs] = useState([]);
     const [selectedJob, setSelectedJob] = useState(null);
-    const [editingJob, setEditingJob] = useState(null);
-    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingJobID, setEditingJobID] = useState(null);
+    const [gridDraft, setGridDraft] = useState(null);
+    const [savingJobID, setSavingJobID] = useState(null);
     
     const [formData, setFormData] = useState({
         JOB_ID: '',
         JOB_TITLE: '',
-        MIN_SALARY: '', 
-        MAX_SALARY: '',
+        MIN_SALARY: '',
+        MAX_SALARY: ''
     });
 
     const handleChange = (e) => {
@@ -24,24 +23,6 @@ function Jobs() {
             ...formData,
             [name]: value
         });
-    };
-
-    const handleEditChange = (e) => {
-        const {name, value} = e.target;
-        setEditingJob({
-            ...editingJob,
-            [name]: value
-        });
-    };
-
-    const handleEdit = (job) => {
-        setEditingJob({
-            JOB_ID: job.JOB_ID,
-            JOB_TITLE: job.JOB_TITLE,
-            MIN_SALARY: job.MIN_SALARY,
-            MAX_SALARY: job.MAX_SALARY,
-        });
-        setShowEditModal(true);
     };
 
     const handleJobSelect = (e) => {
@@ -55,13 +36,11 @@ function Jobs() {
     };
 
     const resetForm = ()=>{
-        setEditingJob(null);
-        setShowEditModal(false);
         setFormData({
             JOB_ID:"",
             JOB_TITLE:"",
             MIN_SALARY:"",
-            MAX_SALARY:"",
+            MAX_SALARY:""
         });
     };
 
@@ -79,53 +58,99 @@ function Jobs() {
         loadJobs();
     }, []);
 
+    const startGridEdit = (job) => {
+        setEditingJobID(job.JOB_ID);
+        setGridDraft({
+            JOB_ID: job.JOB_ID,
+            JOB_TITLE: job.JOB_TITLE,
+            MIN_SALARY: job.MIN_SALARY,
+            MAX_SALARY: job.MAX_SALARY,
+        });
+    };
+
+    const handleGridChange = (e) => {
+        const { name, value } = e.target;
+        setGridDraft({
+            ...gridDraft,
+            [name]: value
+        });
+    };
+
+    const cancelGridEdit = () => {
+        setEditingJobID(null);
+        setGridDraft(null);
+    };
+
+    const saveGridEdit = async () => {
+        if (!gridDraft) {
+            return;
+        }
+
+        if (!gridDraft.JOB_TITLE || !gridDraft.MIN_SALARY || !gridDraft.MAX_SALARY) {
+            alert("Job title, minimum salary, and maximum salary are required.");
+            return;
+        }
+
+        try {
+            setSavingJobID(gridDraft.JOB_ID);
+            const response = await fetch(
+                `http://localhost:8080/api/jobs/${gridDraft.JOB_ID}`,
+                {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(gridDraft)
+                }
+            );
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setJobs(prev =>
+                    prev.map(job =>
+                        job.JOB_ID === data.data.JOB_ID
+                        ? data.data
+                        : job
+                    )
+                );
+
+                if (selectedJob?.JOB_ID === data.data.JOB_ID) {
+                    setSelectedJob(data.data);
+                }
+
+                cancelGridEdit();
+                alert("Job updated successfully!");
+            } else {
+                alert(data.message || "Failed to update job.");
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Network error, make sure backend is running.');
+        } finally {
+            setSavingJobID(null);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         try {
-            let response;
-            if (editingJob) {
-                response = await fetch(
-                    `http://localhost:8080/api/jobs/${editingJob.JOB_ID}`,
-                    {
-                        method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(editingJob)
-                    }
-                );
-            }else{
-                response = await fetch('http://localhost:8080/api/jobs', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
-                });
-            }
+            const response = await fetch('http://localhost:8080/api/jobs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
 
             if (response.ok) {
                 const newJob = await response.json();
-                 if(editingJob) {
-                    setJobs(prev =>
-                        prev.map(job =>
-                            job.JOB_ID === newJob.data.JOB_ID
-                            ? newJob.data
-                            : job
-                        )
-
-                    );
-                    alert(
-                        "Job updated successfully!"
-                    );
-                } else {
-                    setJobs(prev => [
-                        ...prev,
-                        newJob.data
-                    ]);
-                    alert("Job Created!");
-                }
+                setJobs(prev => [
+                    ...prev,
+                    newJob.data
+                ]);
+                alert("A new job has been created");
                 resetForm();
             } else {
                 alert('Failed to save. Ensure all fields are filled correctly.');
@@ -170,24 +195,120 @@ function Jobs() {
                             </p>
                         </div>
                     )}
-                     <h2>All Jobs</h2>
-                        <div className="job-list-scroll">
-                            {jobs.map((job) => (
-                                <JobCard
-                                    key={job.JOB_ID}
-                                    jobID={job.JOB_ID}
-                                    title={job.JOB_TITLE}
-                                    minimumSalary={job.MIN_SALARY}
-                                    maximumSalary={job.MAX_SALARY}
-                                    onClick={() => setSelectedJob(job)}
-                                    onEdit={() =>handleEdit(job)}
-                                />
-                            ))}
-                        </div>
+                    <h2>All Jobs</h2>
+                    <div className="job-grid-wrap">
+                        <table className="job-grid">
+                            <thead>
+                                <tr>
+                                    <th>JOB_ID</th>
+                                    <th>JOB_TITLE</th>
+                                    <th>MIN_SALARY</th>
+                                    <th>MAX_SALARY</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {jobs.map((job) => {
+                                    const isEditing = editingJobID === job.JOB_ID;
+                                    const rowData = isEditing ? gridDraft : job;
+                                    const isSaving = savingJobID === job.JOB_ID;
+
+                                    return (
+                                        <tr key={job.JOB_ID}>
+                                            <td>{job.JOB_ID}</td>
+                                            <td>
+                                                {isEditing ? (
+                                                    <input
+                                                        name="JOB_TITLE"
+                                                        value={rowData.JOB_TITLE}
+                                                        onChange={handleGridChange}
+                                                        disabled={isSaving}
+                                                        required
+                                                    />
+                                                ) : (
+                                                    job.JOB_TITLE
+                                                )}
+                                            </td>
+                                            <td>
+                                                {isEditing ? (
+                                                    <input
+                                                        name="MIN_SALARY"
+                                                        type="number"
+                                                        min="1"
+                                                        value={rowData.MIN_SALARY}
+                                                        onChange={handleGridChange}
+                                                        disabled={isSaving}
+                                                        required
+                                                    />
+                                                ) : (
+                                                    job.MIN_SALARY
+                                                )}
+                                            </td>
+                                            <td>
+                                                {isEditing ? (
+                                                    <input
+                                                        name="MAX_SALARY"
+                                                        type="number"
+                                                        min="1"
+                                                        value={rowData.MAX_SALARY}
+                                                        onChange={handleGridChange}
+                                                        disabled={isSaving}
+                                                        required
+                                                    />
+                                                ) : (
+                                                    job.MAX_SALARY
+                                                )}
+                                            </td>
+                                            <td>
+                                                <div className="job-grid-actions">
+                                                    {isEditing ? (
+                                                        <>
+                                                            <Button
+                                                                type="button"
+                                                                variant="primary"
+                                                                width="fit"
+                                                                disabled={isSaving}
+                                                                onClick={saveGridEdit}
+                                                            >
+                                                                {isSaving ? "Saving" : "Save"}
+                                                            </Button>
+                                                            <Button
+                                                                type="button"
+                                                                variant="danger-light"
+                                                                width="fit"
+                                                                disabled={isSaving}
+                                                                onClick={cancelGridEdit}
+                                                            >
+                                                                Cancel
+                                                            </Button>
+                                                        </>
+                                                    ) : (
+                                                        <Button
+                                                            type="button"
+                                                            variant="edit-light"
+                                                            width="fit"
+                                                            onClick={() => startGridEdit(job)}
+                                                        >
+                                                            Edit
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
             <div className="create-job-form">
-                <Form onSubmit={handleSubmit} className="add-form" footer = {<Button type="button" onClick={resetForm}> Clear</Button>}>
+                <Form
+                    onSubmit={handleSubmit}
+                    className="add-form"
+                    submitLabel="CREATE JOB"
+                    footer={<Button type="button" onClick={resetForm}>Clear</Button>}
+                >
                     <h1>Create New Job</h1>
                     <div className="form-group">
                         <br/>
@@ -227,79 +348,18 @@ function Jobs() {
 
                     <div className="form-group">
                         <label>Maximum Salary</label>
-                        <input 
-                            name="MAX_SALARY" 
-                            type="number" 
-                            value={formData.MAX_SALARY} 
-                            onChange={handleChange} 
+                        <input
+                            name="MAX_SALARY"
+                            type="number"
+                            value={formData.MAX_SALARY}
+                            onChange={handleChange}
                             placeholder='5500'
                             min="1"
-                            required 
+                            required
                         />
                     </div>
                 </Form>
             </div>
-            {showEditModal && (
-                <div className="modal-overlay">
-
-                    <div className="modal">
-
-                        <h1>Edit Job</h1>
-
-                        <Form 
-                            onSubmit={handleSubmit}
-                            className="edit-form"
-                            submitLabel="Save Changes"
-                            footer = {<Button type="button" onClick={resetForm}> Cancel</Button>}
-                        >
-                            <div className="form-group">
-                                <label>Job ID</label>
-                                <input
-                                    name="id"
-                                    value={editingJob.JOB_ID}
-                                    disabled
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label>Job Title</label>
-                                <input
-                                    name="JOB_TITLE"
-                                    value={editingJob.JOB_TITLE}
-                                    onChange={handleEditChange}
-                                    required
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Minimum Salary</label>
-                                <input
-                                    name="MIN_SALARY"
-                                    type="number"
-                                    min = "1"
-                                    value={editingJob.MIN_SALARY}
-                                    onChange={handleEditChange}
-                                    required
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label>Maximum Salary</label>
-                                <input
-                                    type="number"
-                                    min = "1"
-                                    name="MAX_SALARY"
-                                    value={editingJob.MAX_SALARY}
-                                    onChange={handleEditChange}
-                                    required
-                                />
-                            </div>
-
-                        </Form>
-
-                    </div>
-
-                </div>
-            )}
         </div>
     );
 }

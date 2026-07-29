@@ -534,28 +534,125 @@
 .jobs-page {
     display: flex;
     justify-content: center;
-    gap: 60px;
+    gap: 32px;
     width: 100%;
     padding: 40px;
     box-sizing: border-box;
 }
 
+.identify-job-page {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding: 40px;
+    box-sizing: border-box;
+}
+
+.identify-job-form {
+    max-width: 560px;
+}
+
+.identify-job-result {
+    margin-top: 10px;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background: #fafafa;
+    text-align: left;
+}
+
+.identify-job-result p {
+    margin: 0.35rem 0;
+    color: #555;
+}
+
+.form-error {
+    color: #d14b44;
+    font-size: 0.9rem;
+    margin: 0.5rem 0 0;
+    text-align: left;
+}
+
+.form-note {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0.25rem 0 0;
+    text-align: left;
+}
+
 .job-selector {
-    flex: 1;
-    max-width: 450px;
+    flex: 1.5;
+    min-width: 0;
 }
 
 .create-job-form {
     flex: 1;
+    max-width: 420px;
 }
 
-.job-list-scroll {
+.job-grid-wrap {
     margin-top: 15px;
-    height: 350px;
+    max-height: 430px;
     overflow-y: auto;
+    overflow-x: auto;
     border: 1px solid #ddd;
     border-radius: 10px;
-    padding: 10px;
+    background: white;
+}
+
+.job-grid {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 720px;
+}
+
+.job-grid th,
+.job-grid td {
+    border-bottom: 1px solid #eee;
+    padding: 0.65rem;
+    text-align: left;
+    vertical-align: middle;
+    font-size: 0.85rem;
+}
+
+.job-grid th {
+    position: sticky;
+    top: 0;
+    background: #fafafa;
+    color: #222;
+    font-weight: 600;
+    z-index: 1;
+}
+
+.job-grid tr:last-child td {
+    border-bottom: none;
+}
+
+.job-grid input {
+    width: 100%;
+    padding: 0.45rem 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 7px;
+    font-size: 0.85rem;
+    box-sizing: border-box;
+}
+
+.job-grid input:focus {
+    outline: none;
+    border-color: #A1CCA5;
+    box-shadow: 0 0 0 3px rgba(161,204,165,0.25);
+}
+
+.job-grid-actions {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.job-grid-actions .btn {
+    margin: 0;
+    padding: 0.4rem 0.65rem;
 }
 
 .job-card {

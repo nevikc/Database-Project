@@ -28,6 +28,36 @@ async function getAllJobs() {
 
 }
 
+async function getJobDescription(jobID) {
+  let connection;
+  try {
+        connection = await connectDB();
+
+        const result = await connection.execute(
+            `
+            BEGIN
+                :job_title := get_job(:job_id);
+            END;
+            `,
+            {
+                job_id: jobID,
+                job_title: {
+                    dir: oracledb.BIND_OUT,
+                    type: oracledb.STRING,
+                    maxSize: 200
+                }
+            }
+        );
+
+        return result.outBinds.job_title || null;
+
+    } finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
+}
+
 async function getAllEmployees() {
   let connection;
   try {
@@ -175,27 +205,22 @@ async function createJob(jobData){
     try {
         connection = await connectDB();
 
-        /*insert procedure/function name here from sql*/
         await connection.execute(
             `
-            INSERT INTO HR_JOBS (
-                JOB_ID,
-                JOB_TITLE,
-                MIN_SALARY,
-                MAX_SALARY
-            )
-            VALUES (
-                :job_id,
-                :job_title,
-                :min_salary,
-                :max_salary
-            )
+            BEGIN
+                new_job(
+                    :job_id,
+                    :job_title,
+                    :min_salary,
+                    :max_salary
+                );
+            END;
             `,
             {
-                JOB_ID: jobData.JOB_ID,
-                JOB_TITLE: jobData.JOB_TITLE,
-                MIN_SALARY: jobData.MIN_SALARY,
-                MAX_SALARY: jobData.MAX_SALARY
+                job_id: jobData.JOB_ID,
+                job_title: jobData.JOB_TITLE,
+                min_salary: jobData.MIN_SALARY,
+                max_salary: jobData.MAX_SALARY
             },
 
              {
@@ -203,7 +228,12 @@ async function createJob(jobData){
               }
         );
 
-        return jobData;
+        return {
+            JOB_ID: jobData.JOB_ID,
+            JOB_TITLE: jobData.JOB_TITLE,
+            MIN_SALARY: jobData.MIN_SALARY,
+            MAX_SALARY: jobData.MAX_SALARY
+        };
 
     } finally {
         if (connection) {
@@ -282,26 +312,36 @@ async function createEmployee(employeeData){
 async function updateJob(id, updateData){
   const connection = await connectDB();
     try {
-        /*insert procedure/function name here from sql*/
-        await connection.execute(
+        const result = await connection.execute(
             `
-            UPDATE HR_JOBS
-            SET
-                JOB_TITLE = :job_title,
-                MIN_SALARY = :min_salary,
-                MAX_SALARY = :max_salary
-            WHERE JOB_ID = :job_id
+            BEGIN
+                :update_status := update_job(
+                    :job_id,
+                    :job_title,
+                    :min_salary,
+                    :max_salary
+                );
+            END;
             `,
             {
                 job_id: id,
                 job_title: updateData.JOB_TITLE,
                 min_salary: updateData.MIN_SALARY,
-                max_salary: updateData.MAX_SALARY
+                max_salary: updateData.MAX_SALARY,
+                update_status: {
+                    dir: oracledb.BIND_OUT,
+                    type: oracledb.STRING,
+                    maxSize: 200
+                }
             },
             {
                 autoCommit: true
             }
         );
+
+        if (result.outBinds.update_status !== "SUCCESS") {
+            return null;
+        }
 
         return {
             JOB_ID: id,
@@ -350,6 +390,7 @@ async function updateEmployee(id, updateData){
 
 module.exports = {
   getAllJobs,
+  getJobDescription,
   getAllEmployees,
   getAllDepartments,
   getAllManagers,
