@@ -5,6 +5,7 @@ import Button from "../components/Button";
 
 function EmployeeHiringForm() {
     const [employees, setEmployees] = useState([]);
+    const [employeeSearch, setEmployeeSearch] = useState("");
 
     const today = new Date().toISOString().split("T")[0];
     const [formData, setFormData] = useState({
@@ -178,16 +179,73 @@ function EmployeeHiringForm() {
             alert('Network error, make sure backend is running.');
         }
     };
+    const filteredEmployees = employees.filter(employee => {
+        const searchText = employeeSearch.trim().toLowerCase();
 
+        if (!searchText) {
+            return true;
+        }
+
+        const fullName = `${employee.FIRST_NAME || ""} ${employee.LAST_NAME || ""}`;
+
+        const job =
+            employee.jobTitle?.title
+            || employee.JOB_TITLE
+            || employee.JOB_ID
+            || "";
+
+        const manager =
+            employee.manager
+            ? `${employee.manager.firstName} ${employee.manager.lastName}`
+            : employee.MANAGER_ID
+                ? `Manager ID: ${employee.MANAGER_ID}`
+                : "";
+
+        const department =
+            employee.department?.name
+            || employee.DEPARTMENT_NAME
+            || employee.DEPARTMENT_ID
+            || "";
+
+        return [
+            employee.EMPLOYEE_ID,
+            employee.FIRST_NAME,
+            employee.LAST_NAME,
+            fullName,
+            employee.EMAIL,
+            employee.PHONE_NUMBER,
+            employee.SALARY,
+            job,
+            manager,
+            department
+        ]
+            .some(value =>
+                String(value || "").toLowerCase().includes(searchText)
+            );
+    });
     return (
         <div className="employee-page">
             <div className="employee-list">
                 <h2>Employees</h2>
+                <div className="employee-search">
+                    <input
+                        type="search"
+                        className="employee-search-input"
+                        placeholder="Search employees..."
+                        value={employeeSearch}
+                        onChange={(e) => setEmployeeSearch(e.target.value)}
+                    />
+                    <p className="employee-search-count">
+                        Showing {filteredEmployees.length} of {employees.length} employees
+                    </p>
+                </div>
                 <div className="employee-scroll">
                     {employees.length === 0 ? (
                         <p>No employees found.</p>
+                    ) : filteredEmployees.length === 0 ? (
+                        <p>No matching employees found.</p>
                     ) : (
-                        employees.map(employee => (
+                        filteredEmployees.map(employee => (
                             <EmployeeCard
                                 key={employee.EMPLOYEE_ID}
                                 employeeName={
