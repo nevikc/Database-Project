@@ -179,6 +179,40 @@ function EmployeeHiringForm() {
             alert('Network error, make sure backend is running.');
         }
     };
+    const handleDelete = async (employee) => {
+        const confirmDelete = window.confirm(
+            `Are you sure you want to delete ${employee.FIRST_NAME} ${employee.LAST_NAME}?`
+        );
+
+        if (!confirmDelete) {
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `http://localhost:8080/api/employees/${employee.EMPLOYEE_ID}`,
+                {
+                    method: "DELETE"
+                }
+            );
+
+            const responseData = await response.json();
+
+            if (response.ok) {
+                setEmployees(prev =>
+                    prev.filter(emp => emp.EMPLOYEE_ID !== employee.EMPLOYEE_ID)
+                );
+
+                alert("Employee deleted successfully!");
+            } else {
+                alert(responseData.message || "Could not delete employee.");
+            }
+
+        } catch (error) {
+            console.error("Delete error:", error);
+            alert("Network error. Make sure backend is running.");
+        }
+    };
     const filteredEmployees = employees.filter(employee => {
         const searchText = employeeSearch.trim().toLowerCase();
 
@@ -278,9 +312,8 @@ function EmployeeHiringForm() {
                                     || employee.DEPARTMENT_NAME
                                     || (employee.DEPARTMENT_ID ? `Department ID: ${employee.DEPARTMENT_ID}` : "No Department")
                                 }
-                                onEdit={() =>
-                                    handleEdit(employee)
-                                }
+                                onEdit={() => handleEdit(employee)}
+                                onDelete={() => handleDelete(employee)}
                             />
                         ))
                     )}

@@ -260,4 +260,30 @@ module.exports = {
   createEmployee,
   updateJob,
   updateEmployee,
+  deleteEmployee,
+}
+
+async function deleteEmployee(req, res) {
+  try {
+    const id = req.params.employeeID;
+    const deletedEmployee = await service.deleteEmployee(id);
+
+    return res.status(200).json({
+      success: true,
+      data: deletedEmployee,
+      message: "Employee deleted successfully"
+    });
+  } catch (err) {
+    if (err.errorNum === 2292 || err.message.includes("ORA-02292")) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot delete this employee because they are referenced by other records. Try deleting a newly hired test employee instead."
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
 }

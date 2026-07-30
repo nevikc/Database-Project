@@ -1,5 +1,5 @@
 import Button from "./Button";
-import { FaPen } from "react-icons/fa";
+import { FaPen, FaTrash } from "react-icons/fa";
 
 function EmployeeCard({
   employeeName,
@@ -11,12 +11,14 @@ function EmployeeCard({
   department,
   onClick,
   onEdit,
+  onDelete,
 }) {
 
   return (
     <div className="employee-card" onClick={onClick}>
-      {onEdit && (
+      {(onEdit || onDelete) && (
         <div className="employee-card__action">
+          {onEdit && (
             <Button
               variant="edit-light"
               width="fit"
@@ -27,6 +29,20 @@ function EmployeeCard({
             >
               <FaPen size={12} />
             </Button>
+          )}
+
+          {onDelete && (
+            <Button
+              variant="edit-light"
+              width="fit"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+            >
+              <FaTrash size={12} />
+            </Button>
+          )}
         </div>
       )}
       <div className="employee-details">
