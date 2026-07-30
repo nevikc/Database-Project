@@ -1,8 +1,9 @@
 import './App.css'
-import { Routes, Route, NavLink, Navigate } from "react-router-dom";
+import { Routes, Route, NavLink } from "react-router-dom";
 import Jobs from "./pages/Jobs";
 import Employee from "./pages/Employee";
 import Home from "./pages/Home"
+import IdentifyJob from "./pages/IdentifyJob";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
                   Employee Main Menu
                 </NavLink>
                 <NavLink to="/jobs">Jobs Main Menu</NavLink>
+                <NavLink to="/jobs/identify">Identify Job Description</NavLink>
               </>
             )}
           </div>
@@ -32,6 +34,7 @@ function App() {
         <Routes>
           <Route path="/employees" element={<Employee/>} />
           <Route path="/jobs" element={<Jobs />} />
+          <Route path="/jobs/identify" element={<IdentifyJob />} />
           <Route path="/" element={<Home />} />
         </Routes>
       </main>

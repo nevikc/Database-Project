@@ -30,6 +30,33 @@ async function getAllEmployees(req, res){
   }
 }
 
+async function getJobDescription(req, res){
+  try{
+    const jobID = req.params.jobID;
+    const jobTitle = await service.getJobDescription(jobID);
+
+    if (!jobTitle) {
+      return res.status(404).json({
+        success: false,
+        message: "Job Not Found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        JOB_ID: jobID,
+        JOB_TITLE: jobTitle
+      }
+    });
+  } catch(error){
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
 async function getAllDepartments(req, res){
   try{ 
     const departments = await service.getAllDepartments();
@@ -107,11 +134,11 @@ async function createEmployee(req, res){
       data: newEmployee
     });
   }catch(err){
-     if (err.errorNum === 20001 || err.message.includes("ORA-20001")) {
+     if (err.errorNum === 20100 || err.message.includes("ORA-20100")) {
       let oracleMessage = err.message;
 
       oracleMessage = oracleMessage
-      .split("ORA-20001:")[1]  
+      .split("ORA-20100:")[1]  
       .split("\nORA-")[0]      
       .trim();
 
@@ -194,11 +221,11 @@ async function updateEmployee(req, res){
       data: updatedEmployee
     });
   }catch(err){
-    if (err.errorNum === 20001 || err.message.includes("ORA-20001")) {
+    if (err.errorNum === 20100 || err.message.includes("ORA-20100")) {
       let oracleMessage = err.message;
 
       oracleMessage = oracleMessage
-      .split("ORA-20001:")[1]  
+      .split("ORA-20100:")[1]  
       .split("\nORA-")[0]      
       .trim();
 
@@ -225,6 +252,7 @@ async function updateEmployee(req, res){
 
 module.exports = {
   getAllJobs,
+  getJobDescription,
   getAllEmployees,
   getAllDepartments,
   getAllManagers,

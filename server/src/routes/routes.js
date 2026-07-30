@@ -5,6 +5,7 @@ const controller = require("../controllers/controller");
 // Define routes for places
 router.get("/employees", controller.getAllEmployees);
 router.get("/jobs", controller.getAllJobs);
+router.get("/jobs/identify/:jobID", controller.getJobDescription);
 router.get("/departments", controller.getAllDepartments);
 router.get("/managers", controller.getAllManagers);
 
