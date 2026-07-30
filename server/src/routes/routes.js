@@ -15,4 +15,6 @@ router.post("/jobs", controller.createJob);
 router.patch("/employees/:employeeID", controller.updateEmployee);
 router.patch("/jobs/:jobID", controller.updateJob);
 
+router.delete("/employees/:employeeID", controller.deleteEmployee);
+
 module.exports = router;

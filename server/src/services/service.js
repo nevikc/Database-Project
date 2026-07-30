@@ -380,7 +380,56 @@ async function updateEmployee(id, updateData){
         await connection.close();
     }
 }
+async function deleteEmployee(id) {
+  let connection;
 
+  try {
+    connection = await connectDB();
+
+    const employeeBeforeDelete = await connection.execute(
+      `
+      SELECT employee_id,
+             first_name,
+             last_name,
+             email
+      FROM hr_employees
+      WHERE employee_id = :employee_id
+      `,
+      {
+        employee_id: Number(id)
+      },
+      {
+        outFormat: oracledb.OUT_FORMAT_OBJECT
+      }
+    );
+
+    if (employeeBeforeDelete.rows.length === 0) {
+      const error = new Error("Employee not found");
+      error.status = 404;
+      throw error;
+    }
+
+    await connection.execute(
+      `
+      BEGIN
+        employee_delete_sp(
+          p_employee_id => :employee_id
+        );
+      END;
+      `,
+      {
+        employee_id: Number(id)
+      }
+    );
+
+    return employeeBeforeDelete.rows[0];
+
+  } finally {
+    if (connection) {
+      await connection.close();
+    }
+  }
+}
 module.exports = {
   getAllJobs,
   getJobDescription,
@@ -391,4 +440,5 @@ module.exports = {
   createEmployee,
   updateEmployee,
   updateJob,
+  deleteEmployee,
 };
