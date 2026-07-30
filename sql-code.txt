@@ -144,3 +144,16 @@ upper(p_job_id),p_salary,p_manager_id,p_department_id
 commit;
 end employee_hire_sp;
 /
+
+-- deletion
+create or replace procedure employee_delete_sp (
+    p_employee_id in hr_employees.employee_id%type
+)
+is
+begin
+    delete from hr_employees
+    where employee_id = p_employee_id;
+
+    commit;
+end employee_delete_sp;
+/
