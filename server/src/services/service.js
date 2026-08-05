@@ -305,14 +305,14 @@ async function createEmployee(employeeData) {
 async function updateJob(id, updateData){
   const connection = await connectDB();
     try {
-        const result = await connection.execute(
+        await connection.execute(
             `
             BEGIN
-                :update_status := update_job(
-                    :job_id,
-                    :job_title,
-                    :min_salary,
-                    :max_salary
+                update_job(
+                    p_job_id     => :job_id,
+                    p_job_title  => :job_title,
+                    p_min_salary => :min_salary,
+                    p_max_salary => :max_salary
                 );
             END;
             `,
@@ -320,21 +320,9 @@ async function updateJob(id, updateData){
                 job_id: id,
                 job_title: updateData.JOB_TITLE,
                 min_salary: updateData.MIN_SALARY,
-                max_salary: updateData.MAX_SALARY,
-                update_status: {
-                    dir: oracledb.BIND_OUT,
-                    type: oracledb.STRING,
-                    maxSize: 200
-                }
-            },
-            {
-                autoCommit: true
+                max_salary: updateData.MAX_SALARY
             }
         );
-
-        if (result.outBinds.update_status !== "SUCCESS") {
-            return null;
-        }
 
         return {
             JOB_ID: id,
@@ -349,25 +337,22 @@ async function updateJob(id, updateData){
 async function updateEmployee(id, updateData){
   const connection = await connectDB();
     try {
-      /*insert procedure/function name here from sql*/
         await connection.execute(
             `
-            
-            UPDATE HR_EMPLOYEES
-            SET 
-                EMAIL = :email,
-                PHONE_NUMBER = :phone_number,
-                SALARY = :salary
-            WHERE EMPLOYEE_ID = :employee_id
+            BEGIN
+                employee_update_sp(
+                    p_employee_id => :employee_id,
+                    p_email       => :email,
+                    p_phone       => :phone_number,
+                    p_salary      => :salary
+                );
+            END;
             `,
             {
-                employee_id: id,
+                employee_id: Number(id),
                 email: updateData.EMAIL,
                 phone_number: updateData.PHONE_NUMBER,
-                salary: updateData.SALARY
-            },
-            {
-                autoCommit: true
+                salary: Number(updateData.SALARY)
             }
         );
 

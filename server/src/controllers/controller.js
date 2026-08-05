@@ -190,6 +190,12 @@ async function updateJob(req, res){
       data: updatedJob
     });
   }catch(err){
+    if (err.errorNum === 20101 || err.message.includes("ORA-20101")) {
+      return res.status(404).json({
+        success: false,
+        error: "Job Not Found"
+      });
+    }
     if (err.name === "ValidationError") {
       return res.status(400).json({
         success: false,

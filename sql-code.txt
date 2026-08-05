@@ -18,13 +18,14 @@ EXCEPTION
         RETURN NULL;
 END get_job;
 /
--- This function updates a job record by its JOB_ID.
-CREATE OR REPLACE FUNCTION update_job (
+-- This procedure updates a job record by its JOB_ID.
+-- Run "DROP FUNCTION update_job;" once if UPDATE_JOB is currently a function.
+CREATE OR REPLACE PROCEDURE update_job (
     p_job_id IN VARCHAR2,
     p_job_title IN VARCHAR2,
     p_min_salary IN NUMBER,
     p_max_salary IN NUMBER
-) RETURN VARCHAR2
+)
 IS
 BEGIN
     UPDATE HR_JOBS
@@ -35,16 +36,17 @@ BEGIN
     WHERE JOB_ID = update_job.p_job_id;
 
     IF SQL%ROWCOUNT = 0 THEN
-        ROLLBACK;
-        RETURN 'JOB_NOT_FOUND';
+        RAISE_APPLICATION_ERROR(
+            -20101,
+            'Job ' || p_job_id || ' was not found'
+        );
     END IF;
 
     COMMIT;
-    RETURN 'SUCCESS';
 EXCEPTION
     WHEN OTHERS THEN
         ROLLBACK;
-        RETURN SQLERRM;
+        RAISE;
 END update_job;
 /
 -- This procedure creates a new job using all four values entered in the form.
@@ -143,6 +145,24 @@ upper(p_job_id),p_salary,p_manager_id,p_department_id
 );
 commit;
 end employee_hire_sp;
+/
+
+-- employee update procedure
+create or replace procedure employee_update_sp(
+    p_employee_id in hr_employees.employee_id%type,
+    p_email       in hr_employees.email%type,
+    p_phone       in hr_employees.phone_number%type,
+    p_salary      in hr_employees.salary%type
+) is
+begin
+    update hr_employees
+    set email = upper(p_email),
+        phone_number = p_phone,
+        salary = p_salary
+    where employee_id = p_employee_id;
+
+    commit;
+end employee_update_sp;
 /
 
 -- deletion
