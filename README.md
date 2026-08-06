@@ -3,7 +3,8 @@ We built an HR application using React with Vite to produce a single page applic
 
 ### How to Run the Project
 1. Replace ".env example" with ".env" and own username and password. Make sure connected to VPN in order to connect to sqldeveloper
-2. In the root directory run:
+2. Run the sql-code.txt file in sqldeveloper to create the procedures, functions and triggers 
+3. In the root directory run:
   npm install
   npm run install-all
   npm run dev
